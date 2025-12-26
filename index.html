@@ -65,23 +65,30 @@
   const article = document.querySelector('article')
   const status = document.getElementById('status')
 
-  article.addEventListener('input', () => {
-    detectRTL()
-    debounce(500, save)()
-  })
+  article.addEventListener('input', debounce(500, save))
   addEventListener('DOMContentLoaded', load)
   addEventListener('hashchange', load)
 
-  // Auto-detect Arabic for RTL
+  // Per-line auto-detect RTL/LTR
   function detectRTL() {
-    const firstChar = article.textContent.trim().charAt(0)
-    if (firstChar && /[\u0600-\u06FF]/.test(firstChar)) {
-      article.style.direction = 'rtl'
-      article.style.textAlign = 'right'
-    } else {
-      article.style.direction = 'ltr'
-      article.style.textAlign = 'left'
-    }
+    const lines = article.textContent.split('\n')
+    const cursorPos = window.getSelection().anchorOffset
+    article.innerHTML = lines
+      .map(line => {
+        if (/[\u0600-\u06FF]/.test(line.trim().charAt(0))) {
+          return `<div style="direction: rtl; text-align: right;">${line || '<br>'}</div>`
+        } else {
+          return `<div style="direction: ltr; text-align: left;">${line || '<br>'}</div>`
+        }
+      })
+      .join('')
+    // Restore cursor (rough)
+    const range = document.createRange()
+    const sel = window.getSelection()
+    range.setStart(article.firstChild || article, Math.min(cursorPos, article.textContent.length))
+    range.collapse(true)
+    sel.removeAllRanges()
+    sel.addRange(range)
   }
 
   async function load() {
@@ -184,4 +191,4 @@
       URL.revokeObjectURL(a.href)
     }
   })
-</script>
+                                                                    </script>
