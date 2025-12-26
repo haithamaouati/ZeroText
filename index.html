@@ -65,9 +65,24 @@
   const article = document.querySelector('article')
   const status = document.getElementById('status')
 
-  article.addEventListener('input', debounce(500, save))
+  article.addEventListener('input', () => {
+    detectRTL()
+    debounce(500, save)()
+  })
   addEventListener('DOMContentLoaded', load)
   addEventListener('hashchange', load)
+
+  // Auto-detect Arabic for RTL
+  function detectRTL() {
+    const firstChar = article.textContent.trim().charAt(0)
+    if (firstChar && /[\u0600-\u06FF]/.test(firstChar)) {
+      article.style.direction = 'rtl'
+      article.style.textAlign = 'right'
+    } else {
+      article.style.direction = 'ltr'
+      article.style.textAlign = 'left'
+    }
+  }
 
   async function load() {
     try {
@@ -82,6 +97,7 @@
       article.textContent = ''
       article.removeAttribute('style')
     }
+    detectRTL()
     updateTitle()
   }
 
@@ -103,6 +119,7 @@
     const [content, style] = (await decompress(hash.slice(1))).split('\x00')
     article.textContent = content
     if (style) article.setAttribute('style', style)
+    detectRTL()
   }
 
   async function get() {
